@@ -169,6 +169,7 @@ configure-mpv:
 			WAF=$$(command -v waf); \
 		else \
 			./bootstrap.py || PYTHONHTTPSVERIFY=0 ./bootstrap.py || \
+			wget -q -O ./waf http://waf.io/waf-2.0.25 || \
 			wget -q --no-check-certificate -O ./waf https://gitlab.com/ita1024/waf/-/raw/waf-2.0.25/waf; \
 			chmod +x ./waf; \
 			WAF=./waf; \
