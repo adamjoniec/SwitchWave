@@ -168,7 +168,9 @@ configure-mpv:
 		elif command -v waf >/dev/null 2>&1; then \
 			WAF=$$(command -v waf); \
 		else \
-			./bootstrap.py || PYTHONHTTPSVERIFY=0 ./bootstrap.py; \
+			./bootstrap.py || PYTHONHTTPSVERIFY=0 ./bootstrap.py || \
+			wget -q --no-check-certificate -O ./waf https://gitlab.com/ita1024/waf/-/raw/waf-2.0.25/waf; \
+			chmod +x ./waf; \
 			WAF=./waf; \
 		fi; \
 		CFLAGS="-isystem $(LIBNX)/include $(CFLAGS) $(LIB_WARNINGS)" \
