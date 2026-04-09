@@ -79,9 +79,10 @@ NACP_TARGET             :=  $(OUTPUT:.nro=.nacp)
 DIST_FOLDER             :=  $(BUILD)/dist/switch/$(APP_TITLE)
 DIST_TARGET             :=  $(BUILD)/$(APP_TITLE)-$(APP_VERSION)-$(APP_COMMIT).zip
 
-CFILES                  :=  $(shell find $(SOURCES) -maxdepth 1 -name '*.c')
-CPPFILES                :=  $(shell find $(SOURCES) -maxdepth 1 -name '*.cpp')
-SFILES                  :=  $(shell find $(SOURCES) -maxdepth 1 -name '*.s' -or -name '*.S')
+SOURCE_DIRS             :=  $(foreach dir,$(SOURCES),$(if $(wildcard $(dir)),$(dir),))
+CFILES                  :=  $(shell find $(SOURCE_DIRS) -maxdepth 1 -name '*.c')
+CPPFILES                :=  $(shell find $(SOURCE_DIRS) -maxdepth 1 -name '*.cpp')
+SFILES                  :=  $(shell find $(SOURCE_DIRS) -maxdepth 1 -name '*.s' -or -name '*.S')
 GLSLFILES               :=  $(notdir $(shell find $(SHADERS) -maxdepth 1 -name '*.glsl'))
 SVGFILES                :=  $(notdir $(shell find $(TEXTURES) -maxdepth 1 -name '*.svg'))
 
@@ -94,7 +95,8 @@ DEFINES_FLAGS           :=  $(addprefix -D,$(DEFINES))
 INCLUDE_FLAGS           :=  $(addprefix -I,$(INCLUDES)) $(foreach dir,$(LIBDIRS),-I$(dir)/include)
 LIB_FLAGS               :=
 
-FLAGS                   :=  $(shell pkg-config --cflags $(PACKAGES)) $(FLAGS)
+PKG_CONFIG_CFLAGS_PKGS  :=  $(filter-out uam,$(PACKAGES))
+FLAGS                   :=  $(shell pkg-config --cflags $(PKG_CONFIG_CFLAGS_PKGS)) $(FLAGS)
 CFLAGS                  :=  $(DEFINES_FLAGS) $(INCLUDE_FLAGS) $(ARCH) $(FLAGS) $(CFLAGS)
 CXXFLAGS                :=  $(DEFINES_FLAGS) $(INCLUDE_FLAGS) $(ARCH) $(FLAGS) $(CXXFLAGS)
 LDFLAGS                 :=  $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(ARCH) $(LDFLAGS) $(LINKS)
@@ -132,7 +134,7 @@ NROFLAGS                :=  --icon=$(strip $(APP_ICON)) --nacp=$(strip $(NACP_TA
 
 ifneq ($(ROMFS),)
     NROFLAGS            +=  --romfsdir=$(strip $(ROMFS))
-    ROMFS_TARGET        :=  $(shell find $(ROMFS) -type 'f') $(DKSHFILES) $(BCFILES)
+    ROMFS_TARGET        :=  $(shell [ -d $(ROMFS) ] && find $(ROMFS) -type 'f') $(DKSHFILES) $(BCFILES)
 endif
 
 # -----------------------------------------------
