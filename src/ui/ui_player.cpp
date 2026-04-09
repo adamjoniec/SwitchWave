@@ -476,13 +476,13 @@ void PlayerGui::render() {
 
 SeekBar::SeekBar(Renderer &renderer, Context &context, LibmpvController &lmpv):
         Widget(renderer), lmpv(lmpv), context(context) {
-    this->play_texture      = this->renderer.load_texture("romfs:/textures/play-64*64-bc4.bc",
+    this->play_texture      = this->renderer.load_texture("romfs:/textures/play-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
-    this->pause_texture     = this->renderer.load_texture("romfs:/textures/pause-64*64-bc4.bc",
+    this->pause_texture     = this->renderer.load_texture("romfs:/textures/pause-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
-    this->previous_texture  = this->renderer.load_texture("romfs:/textures/previous-64*64-bc4.bc",
+    this->previous_texture  = this->renderer.load_texture("romfs:/textures/previous-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
-    this->next_texture      = this->renderer.load_texture("romfs:/textures/next-64*64-bc4.bc",
+    this->next_texture      = this->renderer.load_texture("romfs:/textures/next-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
 
     this->lmpv.observe_property("pause", &this->pause, +[](void *user, mpv_event_property *prop) {
