@@ -163,12 +163,16 @@ configure-ffmpeg:
 configure-mpv:
 	@mkdir -p $(BUILD)/mpv
 	@cd $(TOPDIR)/mpv; \
-		if [ ! -f ./waf ]; then \
+		if [ -f ./waf ]; then \
+			WAF=./waf; \
+		elif command -v waf >/dev/null 2>&1; then \
+			WAF=$$(command -v waf); \
+		else \
 			./bootstrap.py || PYTHONHTTPSVERIFY=0 ./bootstrap.py; \
-		fi
-	@cd $(TOPDIR)/mpv; \
+			WAF=./waf; \
+		fi; \
 		CFLAGS="-isystem $(LIBNX)/include $(CFLAGS) $(LIB_WARNINGS)" \
-		./waf configure -o $(TOPDIR)/$(BUILD)/mpv --prefix=$(INSTALL) $(MPV_CONFIG)
+		$$WAF configure -o $(TOPDIR)/$(BUILD)/mpv --prefix=$(INSTALL) $(MPV_CONFIG)
 	@sed -i 's/#define HAVE_POSIX 1/#define HAVE_POSIX 0/' $(BUILD)/mpv/config.h
 
 configure-uam:
@@ -180,7 +184,15 @@ build-ffmpeg:
 
 build-mpv:
 	@cd $(BUILD)/mpv; \
-		$(TOPDIR)/mpv/waf install
+		if [ -f $(TOPDIR)/mpv/waf ]; then \
+			WAF=$(TOPDIR)/mpv/waf; \
+		elif command -v waf >/dev/null 2>&1; then \
+			WAF=$$(command -v waf); \
+		else \
+			echo "waf not found. Run 'make configure-mpv' first."; \
+			exit 1; \
+		fi; \
+		$$WAF install
 
 build-uam:
 	@meson install -C $(BUILD)/libuam
