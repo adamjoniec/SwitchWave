@@ -163,7 +163,9 @@ configure-ffmpeg:
 configure-mpv:
 	@mkdir -p $(BUILD)/mpv
 	@cd $(TOPDIR)/mpv; \
-		./bootstrap.py
+		if [ ! -f ./waf ]; then \
+			./bootstrap.py || PYTHONHTTPSVERIFY=0 ./bootstrap.py; \
+		fi
 	@cd $(TOPDIR)/mpv; \
 		CFLAGS="-isystem $(LIBNX)/include $(CFLAGS) $(LIB_WARNINGS)" \
 		./waf configure -o $(TOPDIR)/$(BUILD)/mpv --prefix=$(INSTALL) $(MPV_CONFIG)
