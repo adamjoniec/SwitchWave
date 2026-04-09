@@ -1048,6 +1048,8 @@ void InfoHelp::render() {
         bullet_wrapped("Use \ue0c1, or slide the touchscreen \ue121 to seek forward and backward");
         bullet_wrapped("Use \ue0c2 horizontally, or slide the right side of the touchscreen \ue121 to adjust the volume");
         bullet_wrapped("Use \ue0c2 vertically, or slide the left side of the touchscreen \ue121 to adjust the backlight brightness");
+        bullet_wrapped("Double tap the left side of the touchscreen \ue121 to quit playback");
+        bullet_wrapped("Double tap the right side of the touchscreen \ue121 to open playback settings");
         bullet_wrapped("Press \ue081/\ue082 to take a screenshot at the source video resolution");
         bullet_wrapped("Press \ue0b1/\ue0b2 to show the playback bar, and \ue001 to hide it");
     }
@@ -1064,6 +1066,7 @@ void InfoHelp::render() {
         SW_SCOPEGUARD([this] { ImGui::SetWindowFontScale(this->scale_factor()); });
 
         bullet_wrapped("Press \ue003 to open the menu");
+        bullet_wrapped("With the menu open, tap outside of it to close it");
         bullet_wrapped("Most relevant settings can be found here, "
             "along with useful statistics on playback and performance");
     }
