@@ -36,7 +36,6 @@ A hardware-accelerated media player for the Nintendo Switch, built on mpv and FF
 
 ### Docker (recommended)
 ```sh
-git submodule update --init --recursive
 ./build-docker.sh
 ```
 This builds the toolchain image and compiles everything automatically. Output will be found in `build/`.
@@ -47,7 +46,6 @@ GIMP_VERSION=3 ./build-docker.sh
 ```
 
 ### Manual
-- Initialize submodules first: `git submodule update --init --recursive`.
 - Set up a [devkitpro](https://devkitpro.org/wiki/devkitPro_pacman) environment for Switch homebrew development.
 - Install the following packages: `switch-bzip2`, `switch-dav1d`, `switch-freetype`, `switch-glm`, `switch-harfbuzz`, `switch-libarchive`, `switch-libass`, `switch-libfribidi`, `switch-libjpeg-turbo`, `switch-libpng`, `switch-libwebp`, `switch-curl`, `switch-libssh2`, `switch-mbedtls`, `switch-ntfs-3g` and `switch-lwext4`. In addition, the following build dependencies are required: `switch-pkg-config`, `dkp-meson-scripts`, `dkp-toolchain-vars`, and [GIMP](https://www.gimp.org/) (2 or 3).
 - Compile and install a GPL build of [libusbhsfs](https://github.com/DarkMatterCore/libusbhsfs).

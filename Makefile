@@ -79,10 +79,9 @@ NACP_TARGET             :=  $(OUTPUT:.nro=.nacp)
 DIST_FOLDER             :=  $(BUILD)/dist/switch/$(APP_TITLE)
 DIST_TARGET             :=  $(BUILD)/$(APP_TITLE)-$(APP_VERSION)-$(APP_COMMIT).zip
 
-SOURCE_DIRS             :=  $(foreach dir,$(SOURCES),$(if $(wildcard $(dir)),$(dir),))
-CFILES                  :=  $(shell find $(SOURCE_DIRS) -maxdepth 1 -name '*.c')
-CPPFILES                :=  $(shell find $(SOURCE_DIRS) -maxdepth 1 -name '*.cpp')
-SFILES                  :=  $(shell find $(SOURCE_DIRS) -maxdepth 1 -name '*.s' -or -name '*.S')
+CFILES                  :=  $(shell find $(SOURCES) -maxdepth 1 -name '*.c')
+CPPFILES                :=  $(shell find $(SOURCES) -maxdepth 1 -name '*.cpp')
+SFILES                  :=  $(shell find $(SOURCES) -maxdepth 1 -name '*.s' -or -name '*.S')
 GLSLFILES               :=  $(notdir $(shell find $(SHADERS) -maxdepth 1 -name '*.glsl'))
 SVGFILES                :=  $(notdir $(shell find $(TEXTURES) -maxdepth 1 -name '*.svg'))
 
@@ -95,8 +94,7 @@ DEFINES_FLAGS           :=  $(addprefix -D,$(DEFINES))
 INCLUDE_FLAGS           :=  $(addprefix -I,$(INCLUDES)) $(foreach dir,$(LIBDIRS),-I$(dir)/include)
 LIB_FLAGS               :=
 
-PKG_CONFIG_CFLAGS_PKGS  :=  $(filter-out uam,$(PACKAGES))
-FLAGS                   :=  $(shell pkg-config --cflags $(PKG_CONFIG_CFLAGS_PKGS)) $(FLAGS)
+FLAGS                   :=  $(shell pkg-config --cflags $(PACKAGES)) $(FLAGS)
 CFLAGS                  :=  $(DEFINES_FLAGS) $(INCLUDE_FLAGS) $(ARCH) $(FLAGS) $(CFLAGS)
 CXXFLAGS                :=  $(DEFINES_FLAGS) $(INCLUDE_FLAGS) $(ARCH) $(FLAGS) $(CXXFLAGS)
 LDFLAGS                 :=  $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(ARCH) $(LDFLAGS) $(LINKS)
@@ -134,7 +132,7 @@ NROFLAGS                :=  --icon=$(strip $(APP_ICON)) --nacp=$(strip $(NACP_TA
 
 ifneq ($(ROMFS),)
     NROFLAGS            +=  --romfsdir=$(strip $(ROMFS))
-    ROMFS_TARGET        :=  $(shell [ -d $(ROMFS) ] && find $(ROMFS) -type 'f') $(DKSHFILES) $(BCFILES)
+    ROMFS_TARGET        :=  $(shell find $(ROMFS) -type 'f') $(DKSHFILES) $(BCFILES)
 endif
 
 # -----------------------------------------------
@@ -163,22 +161,11 @@ configure-ffmpeg:
 configure-mpv:
 	@mkdir -p $(BUILD)/mpv
 	@cd $(TOPDIR)/mpv; \
-		if [ -f ./waf ]; then \
-			WAF=./waf; \
-		elif command -v waf >/dev/null 2>&1; then \
-			WAF=$$(command -v waf); \
-		else \
-			./bootstrap.py || PYTHONHTTPSVERIFY=0 ./bootstrap.py || \
-			wget -q -O ./waf http://waf.io/waf-2.0.25 || \
-			wget -q --no-check-certificate -O ./waf https://gitlab.com/ita1024/waf/-/raw/waf-2.0.25/waf; \
-			chmod +x ./waf; \
-			WAF=./waf; \
-		fi; \
+		./bootstrap.py
+	@cd $(TOPDIR)/mpv; \
 		CFLAGS="-isystem $(LIBNX)/include $(CFLAGS) $(LIB_WARNINGS)" \
-		$$WAF configure -o $(TOPDIR)/$(BUILD)/mpv --prefix=$(INSTALL) $(MPV_CONFIG)
-	@if [ -f $(BUILD)/mpv/config.h ]; then \
-		sed -i 's/#define HAVE_POSIX 1/#define HAVE_POSIX 0/' $(BUILD)/mpv/config.h; \
-	fi
+		./waf configure -o $(TOPDIR)/$(BUILD)/mpv --prefix=$(INSTALL) $(MPV_CONFIG)
+	@sed -i 's/#define HAVE_POSIX 1/#define HAVE_POSIX 0/' $(BUILD)/mpv/config.h
 
 configure-uam:
 	@cd $(TOPDIR)/libuam; \
@@ -189,15 +176,7 @@ build-ffmpeg:
 
 build-mpv:
 	@cd $(BUILD)/mpv; \
-		if [ -f $(TOPDIR)/mpv/waf ]; then \
-			WAF=$(TOPDIR)/mpv/waf; \
-		elif command -v waf >/dev/null 2>&1; then \
-			WAF=$$(command -v waf); \
-		else \
-			echo "waf not found. Run 'make configure-mpv' first."; \
-			exit 1; \
-		fi; \
-		$$WAF install
+		$(TOPDIR)/mpv/waf install
 
 build-uam:
 	@meson install -C $(BUILD)/libuam
