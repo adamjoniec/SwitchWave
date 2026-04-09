@@ -13,7 +13,6 @@ RUN if [ "$GIMP_VERSION" = "3" ]; then \
     autoconf automake libtool \
     bison flex \
     python3-pip ninja-build \
-    waf \
     wget ca-certificates \
     && if [ "$GIMP_VERSION" = "3" ]; then \
         apt-get install -y -t trixie --no-install-recommends gimp python3-mako; \
