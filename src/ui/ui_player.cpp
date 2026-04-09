@@ -73,13 +73,38 @@ constexpr HidTouchState *find_touch_by_id(HidTouchScreenState &state, std::uint3
     return nullptr;
 }
 
-constexpr std::pair<std::int32_t, std::int32_t> touch_delta(HidTouchState &a, HidTouchState &b) {
+constexpr std::pair<std::int32_t, std::int32_t> touch_delta(HidTouchState const &a, HidTouchState const &b) {
     return std::pair{ std::int32_t(a.x - b.x), std::int32_t(a.y - b.y) };
 }
 
-constexpr float touch_distance(HidTouchState &a, HidTouchState &b) {
+constexpr float touch_distance(HidTouchState const &a, HidTouchState const &b) {
     auto [dx, dy] = touch_delta(a, b);
     return std::sqrt(dx*dx + dy*dy);
+}
+
+enum class PlayerTapZone {
+    None,
+    Exit,
+    Menu,
+};
+
+constexpr PlayerTapZone classify_player_tap_zone(HidTouchState const &touch, std::int32_t width, std::int32_t height) {
+    (void) height;
+
+    auto const left_zone_max = width * PlayerGui::TouchSideActionZoneWidth;
+    if (touch.x <= left_zone_max)
+        return PlayerTapZone::Exit;
+
+    auto const right_zone_min = width * (1.0f - PlayerGui::TouchSideActionZoneWidth);
+    if (touch.x >= right_zone_min)
+        return PlayerTapZone::Menu;
+
+    return PlayerTapZone::None;
+}
+
+constexpr bool is_touch_in_rect(HidTouchState const &touch, ImVec2 const &pos, ImVec2 const &size) {
+    return (touch.x >= pos.x) && (touch.x <= pos.x + size.x) &&
+           (touch.y >= pos.y) && (touch.y <= pos.y + size.y);
 }
 
 } // namespace
@@ -182,6 +207,9 @@ bool PlayerGui::update_state(PadState &pad, HidTouchScreenState &touch) {
 
     if (down & HidNpadButton_Plus && !ImGui::nx::isSwkbdVisible())
         return false;
+
+    if (ImGui::nx::isSwkbdVisible() || this->menu.is_visible || this->console.is_visible)
+        this->has_prev_tap = false;
 
     // Can only run when the swkbd isn't shown so don't bother using ImGui API
     if (!(this->menu.is_visible || this->console.is_visible)) {
@@ -301,9 +329,36 @@ bool PlayerGui::update_state(PadState &pad, HidTouchScreenState &touch) {
             this->has_touch = true;
         }
     } else {
-        if (this->has_touch && this->touch_state == TouchGestureState::Tap &&
-                !this->seek_bar.ignore_input)
+        if (this->has_touch && this->touch_state == TouchGestureState::Tap && !this->seek_bar.ignore_input) {
+            if (!ImGui::nx::isSwkbdVisible()) {
+                auto zone = classify_player_tap_zone(this->orig_touch, this->renderer.image_width, this->renderer.image_height);
+                auto prev_zone = classify_player_tap_zone(this->prev_tap, this->renderer.image_width, this->renderer.image_height);
+                auto is_double_tap = this->has_prev_tap &&
+                    (now - this->prev_tap_time <= PlayerGui::TouchActionDoubleTapTimeout) &&
+                    (touch_distance(this->orig_touch, this->prev_tap) <= PlayerGui::TouchActionDoubleTapThreshold) &&
+                    (zone == prev_zone);
+
+                switch (is_double_tap ? zone : PlayerTapZone::None) {
+                    case PlayerTapZone::Exit:
+                        this->has_prev_tap = false;
+                        return false;
+                    case PlayerTapZone::Menu:
+                        this->menu.is_visible = true;
+                        this->seek_bar.ignore_input = true;
+                        this->has_touch = false;
+                        this->has_prev_tap = false;
+                        return true;
+                    case PlayerTapZone::None:
+                    default:
+                        this->prev_tap = this->orig_touch;
+                        this->prev_tap_time = now;
+                        this->has_prev_tap = true;
+                        break;
+                }
+            }
+
             this->seek_bar.begin_visible();
+        }
 
         this->has_touch = false;
     }
@@ -315,6 +370,7 @@ bool PlayerGui::update_state(PadState &pad, HidTouchScreenState &touch) {
              sdy = float(dy) / this->renderer.image_height;
 
         if ((this->touch_state == TouchGestureState::Tap) && (d >= PlayerGui::TouchGestureThreshold)) {
+            this->has_prev_tap = false;
             if (std::abs(dx) >= std::abs(dy)) {
                 if (this->renderer.image_height - this->orig_touch.y > this->screen_rel_height(SeekBar::BarHeight)) {
                     this->touch_state = TouchGestureState::SlideSeek;
@@ -947,6 +1003,13 @@ bool PlayerMenu::update_state(PadState &pad, HidTouchScreenState &touch) {
     if ((padGetButtonsDown(&pad) & HidNpadButton_Y) && !ImGui::nx::isSwkbdVisible())
         this->is_visible ^= 1;
 
+    if (this->is_visible && touch.count && !ImGui::nx::isSwkbdVisible() &&
+            !this->is_touch_within_active_windows(touch.touches[0])) {
+        this->is_visible = false;
+        this->cur_subwindow = SubwindowType::None;
+        return false;
+    }
+
     if (now - this->last_stats_update > PlayerMenu::StatsRefreshInterval) {
         this->last_stats_update = now;
         this->lmpv.get_property_async("vo-passes", MPV_FORMAT_NODE, nullptr, +[](void *user, mpv_event_property *prop) {
@@ -1001,6 +1064,42 @@ bool PlayerMenu::update_state(PadState &pad, HidTouchScreenState &touch) {
 
     if (this->is_filepicker(this->cur_subwindow))
         this->explorer.update_state(pad, touch);
+
+    return false;
+}
+
+bool PlayerMenu::is_touch_within_active_windows(HidTouchState const &touch) const {
+    auto menu_pos = this->screen_rel_vec<ImVec2>(PlayerMenu::MenuPosX, PlayerMenu::MenuPosY);
+    auto menu_size = this->screen_rel_vec<ImVec2>(PlayerMenu::MenuWidth, PlayerMenu::MenuHeight);
+    if (is_touch_in_rect(touch, menu_pos, menu_size))
+        return true;
+
+    if (this->cur_subwindow == SubwindowType::None)
+        return false;
+
+    switch (this->cur_subwindow) {
+        case SubwindowType::ShaderFilepicker:
+        case SubwindowType::SubtitleFilepicker:
+        case SubwindowType::PlaylistFilepicker: {
+            auto subwindow_pos = this->screen_rel_vec<ImVec2>(PlayerMenu::FilepickerPosX, PlayerMenu::FilepickerPosY);
+            auto subwindow_size = this->screen_rel_vec<ImVec2>(PlayerMenu::FilepickerWidth, PlayerMenu::FilepickerHeight);
+            return is_touch_in_rect(touch, subwindow_pos, subwindow_size);
+        }
+        case SubwindowType::VideoQuality: {
+            auto subwindow_pos = this->screen_rel_vec<ImVec2>(PlayerMenu::SubMenuPosX, PlayerMenu::SubMenuPosY);
+            auto subwindow_size = this->screen_rel_vec<ImVec2>(PlayerMenu::SubMenuWidth, PlayerMenu::VideoSubMenuHeight);
+            return is_touch_in_rect(touch, subwindow_pos, subwindow_size);
+        }
+        case SubwindowType::ZoomPos:
+        case SubwindowType::ColorEqualizer: {
+            auto subwindow_pos = this->screen_rel_vec<ImVec2>(PlayerMenu::SubMenuPosX, PlayerMenu::SubMenuPosY);
+            auto subwindow_size = this->screen_rel_vec<ImVec2>(PlayerMenu::SubMenuWidth, PlayerMenu::SubMenuHeight);
+            return is_touch_in_rect(touch, subwindow_pos, subwindow_size);
+        }
+        case SubwindowType::None:
+        default:
+            break;
+    }
 
     return false;
 }

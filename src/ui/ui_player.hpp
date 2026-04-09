@@ -359,6 +359,8 @@ class PlayerMenu final: public Widget {
         int video_unscaled, keepaspect;
 
     private:
+        bool is_touch_within_active_windows(HidTouchState const &touch) const;
+
         enum class SubwindowType {
             None,
             VideoQuality,
@@ -704,6 +706,9 @@ class PlayerGui final: public Widget {
         constexpr static float TouchGestureThreshold         = 60.0f;
         constexpr static float TouchGestureXMultipler        = 150.0f; // 2:30
         constexpr static float TouchGestureYMultipler        = 1.5f;   // > 1 so we can go from 0 to 100% in one swipe
+        constexpr static float TouchSideActionZoneWidth      = 0.35f;
+        constexpr static auto  TouchActionDoubleTapTimeout   = 400ms;
+        constexpr static float TouchActionDoubleTapThreshold  = 80.0f;
         constexpr static auto  MovieCaptureTimeout           = std::chrono::nanoseconds(500ms).count();
         constexpr static auto  BrightnessVolumeChangeTimeout = 0.3s;
 
@@ -750,6 +755,9 @@ class PlayerGui final: public Widget {
         bool has_touch = false;
         TouchGestureState touch_state = TouchGestureState::Tap;
         HidTouchState orig_touch, cur_touch;
+        bool has_prev_tap = false;
+        HidTouchState prev_tap = {};
+        std::chrono::system_clock::time_point prev_tap_time = {};
         union {
             double time_pos;
             float brightness;
