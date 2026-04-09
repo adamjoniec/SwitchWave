@@ -176,7 +176,9 @@ configure-mpv:
 		fi; \
 		CFLAGS="-isystem $(LIBNX)/include $(CFLAGS) $(LIB_WARNINGS)" \
 		$$WAF configure -o $(TOPDIR)/$(BUILD)/mpv --prefix=$(INSTALL) $(MPV_CONFIG)
-	@sed -i 's/#define HAVE_POSIX 1/#define HAVE_POSIX 0/' $(BUILD)/mpv/config.h
+	@if [ -f $(BUILD)/mpv/config.h ]; then \
+		sed -i 's/#define HAVE_POSIX 1/#define HAVE_POSIX 0/' $(BUILD)/mpv/config.h; \
+	fi
 
 configure-uam:
 	@cd $(TOPDIR)/libuam; \
