@@ -30,17 +30,17 @@ std::string_view utf8_skip_from_end(std::string_view sv, int skip) {
 Explorer::Explorer(Renderer &renderer, Context &context): Widget(renderer), context(context) {
     this->path = !this->context.cur_path.empty() ? this->context.cur_path : "sdmc:/";
 
-    this->file_texture    = this->renderer.load_texture("romfs:/textures/file-64*64-bc4.bc",
+    this->file_texture    = this->renderer.load_texture("romfs:/textures/file-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
-    this->folder_texture  = this->renderer.load_texture("romfs:/textures/folder-64*64-bc4.bc",
+    this->folder_texture  = this->renderer.load_texture("romfs:/textures/folder-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
-    this->recent_texture  = this->renderer.load_texture("romfs:/textures/recent-64*64-bc4.bc",
+    this->recent_texture  = this->renderer.load_texture("romfs:/textures/recent-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
-    this->sd_texture      = this->renderer.load_texture("romfs:/textures/sd-64*64-bc4.bc",
+    this->sd_texture      = this->renderer.load_texture("romfs:/textures/sd-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
-    this->usb_texture     = this->renderer.load_texture("romfs:/textures/usb-64*64-bc4.bc",
+    this->usb_texture     = this->renderer.load_texture("romfs:/textures/usb-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
-    this->network_texture = this->renderer.load_texture("romfs:/textures/network-64*64-bc4.bc",
+    this->network_texture = this->renderer.load_texture("romfs:/textures/network-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
 }
 

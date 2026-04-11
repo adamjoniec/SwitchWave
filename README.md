@@ -39,6 +39,7 @@ A hardware-accelerated media player for the Nintendo Switch, built on mpv and FF
 ./build-docker.sh
 ```
 This builds the toolchain image and compiles everything automatically. Output will be found in `build/`.
+The script also normalizes line endings for build scripts inside mounted submodules to avoid CRLF issues on Windows-hosted checkouts.
 
 To build with GIMP 3 instead of the default GIMP 2:
 ```sh

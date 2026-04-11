@@ -94,7 +94,8 @@ DEFINES_FLAGS           :=  $(addprefix -D,$(DEFINES))
 INCLUDE_FLAGS           :=  $(addprefix -I,$(INCLUDES)) $(foreach dir,$(LIBDIRS),-I$(dir)/include)
 LIB_FLAGS               :=
 
-FLAGS                   :=  $(shell pkg-config --cflags $(PACKAGES)) $(FLAGS)
+PKG_CONFIG_CFLAGS_PKGS  :=  $(filter-out uam,$(PACKAGES))
+FLAGS                   :=  $(shell pkg-config --cflags $(PKG_CONFIG_CFLAGS_PKGS)) $(FLAGS)
 CFLAGS                  :=  $(DEFINES_FLAGS) $(INCLUDE_FLAGS) $(ARCH) $(FLAGS) $(CFLAGS)
 CXXFLAGS                :=  $(DEFINES_FLAGS) $(INCLUDE_FLAGS) $(ARCH) $(FLAGS) $(CXXFLAGS)
 LDFLAGS                 :=  $(foreach dir,$(LIBDIRS),-L$(dir)/lib) $(ARCH) $(LDFLAGS) $(LINKS)
@@ -132,7 +133,7 @@ NROFLAGS                :=  --icon=$(strip $(APP_ICON)) --nacp=$(strip $(NACP_TA
 
 ifneq ($(ROMFS),)
     NROFLAGS            +=  --romfsdir=$(strip $(ROMFS))
-    ROMFS_TARGET        :=  $(shell find $(ROMFS) -type 'f') $(DKSHFILES) $(BCFILES)
+    ROMFS_TARGET        :=  $(shell [ -d $(ROMFS) ] && find $(ROMFS) -type 'f') $(DKSHFILES) $(BCFILES)
 endif
 
 # -----------------------------------------------

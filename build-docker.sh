@@ -10,6 +10,9 @@ docker run --rm --name devkitpro-switchwave \
         set -e
         git config --global --add safe.directory '*'
         cd /mnt/
+        for f in ffmpeg/configure mpv/bootstrap.py misc/gimp-bcn-convert.sh; do
+            [ -f "$f" ] && sed -i 's/\r$//' "$f" && chmod +x "$f"
+        done
         make clean
         make configure-ffmpeg
         make build-ffmpeg -j\$(nproc)
