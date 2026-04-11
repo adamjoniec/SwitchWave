@@ -8,7 +8,16 @@ if ! [ -x "$(command -v gimp)" ]; then
     exit 1
 fi
 
-IFS='-*' read -r NAME WIDTH HEIGHT COMP < <(basename $1 | cut -d '.' -f 1)
+INPUT_BASENAME=$(basename "$1" | cut -d '.' -f 1)
+if [[ "$INPUT_BASENAME" =~ ^(.+)-([0-9]+)[x\*]([0-9]+)-([^-]+)$ ]]; then
+    NAME="${BASH_REMATCH[1]}"
+    WIDTH="${BASH_REMATCH[2]}"
+    HEIGHT="${BASH_REMATCH[3]}"
+    COMP="${BASH_REMATCH[4]}"
+else
+    echo "Error: invalid texture filename format '$INPUT_BASENAME'" >&2
+    exit 1
+fi
 
 GIMP_MAJOR=$(gimp --version 2>&1 | grep -oP '\d+' | head -1)
 

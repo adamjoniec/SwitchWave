@@ -681,7 +681,7 @@ int ConfigEditor::save_text() {
 SettingsEditor::SettingsEditor(Renderer &renderer, Context &context): Widget(renderer), context(context) {
     SettingsEditor::s_this = this;
 
-    this->delete_texture = this->renderer.load_texture("romfs:/textures/delete-64*64-bc4.bc",
+    this->delete_texture = this->renderer.load_texture("romfs:/textures/delete-64x64-bc4.bc",
         64, 64, DkImageFormat_R_BC4_Unorm, DkImageFlags_Usage2DEngine);
 }
 
