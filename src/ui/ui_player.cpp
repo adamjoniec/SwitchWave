@@ -107,6 +107,14 @@ constexpr bool is_touch_in_rect(HidTouchState const &touch, ImVec2 const &pos, I
            (touch.y >= pos.y) && (touch.y <= pos.y + size.y);
 }
 
+constexpr bool is_touch_in_seekbar_area(HidTouchState const &touch, std::int32_t width, std::int32_t height) {
+    return is_touch_in_rect(
+        touch,
+        ImVec2{0.0f, height * (1.0f - SeekBar::BarHeight)},
+        ImVec2{float(width), height * SeekBar::BarHeight}
+    );
+}
+
 } // namespace
 
 void PlayerGui::screenshot_button_thread_fn(std::stop_token token) {
@@ -333,12 +341,16 @@ bool PlayerGui::update_state(PadState &pad, HidTouchScreenState &touch) {
             if (!ImGui::nx::isSwkbdVisible()) {
                 auto zone = classify_player_tap_zone(this->orig_touch, this->renderer.image_width, this->renderer.image_height);
                 auto prev_zone = classify_player_tap_zone(this->prev_tap, this->renderer.image_width, this->renderer.image_height);
+                auto hide_seekbar_on_tap = this->seek_bar.is_visible &&
+                    !is_touch_in_seekbar_area(this->orig_touch, this->renderer.image_width, this->renderer.image_height);
+                if (hide_seekbar_on_tap)
+                    this->seek_bar.is_visible = false;
                 auto is_double_tap = this->has_prev_tap &&
                     (now - this->prev_tap_time <= PlayerGui::TouchActionDoubleTapTimeout) &&
                     (touch_distance(this->orig_touch, this->prev_tap) <= PlayerGui::TouchActionDoubleTapThreshold) &&
                     (zone == prev_zone);
 
-                switch (is_double_tap ? zone : PlayerTapZone::None) {
+                switch ((is_double_tap && !hide_seekbar_on_tap) ? zone : PlayerTapZone::None) {
                     case PlayerTapZone::Exit:
                         this->has_prev_tap = false;
                         return false;
