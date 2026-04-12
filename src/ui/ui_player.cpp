@@ -338,10 +338,11 @@ bool PlayerGui::update_state(PadState &pad, HidTouchScreenState &touch) {
         }
     } else {
         if (this->has_touch && this->touch_state == TouchGestureState::Tap && !this->seek_bar.ignore_input) {
+            auto hide_seekbar_on_tap = false;
             if (!ImGui::nx::isSwkbdVisible()) {
                 auto zone = classify_player_tap_zone(this->orig_touch, this->renderer.image_width, this->renderer.image_height);
                 auto prev_zone = classify_player_tap_zone(this->prev_tap, this->renderer.image_width, this->renderer.image_height);
-                auto hide_seekbar_on_tap = this->seek_bar.is_visible &&
+                hide_seekbar_on_tap = this->seek_bar.is_visible &&
                     !is_touch_in_seekbar_area(this->orig_touch, this->renderer.image_width, this->renderer.image_height);
                 if (hide_seekbar_on_tap)
                     this->seek_bar.is_visible = false;
@@ -369,7 +370,8 @@ bool PlayerGui::update_state(PadState &pad, HidTouchScreenState &touch) {
                 }
             }
 
-            this->seek_bar.begin_visible();
+            if (!hide_seekbar_on_tap)
+                this->seek_bar.begin_visible();
         }
 
         this->has_touch = false;
