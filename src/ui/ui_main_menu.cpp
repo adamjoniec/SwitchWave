@@ -69,7 +69,7 @@ MainMenuGui::MainMenuGui(Renderer &renderer, Context &context):
     auto &imstyle = ImGui::GetStyle();
 
     imctx.NavDisableHighlight  = false;
-    imctx.NavDisableMouseHover = true;
+    imctx.NavDisableMouseHover = false;
     imstyle.Alpha              = 0.85f;
 }
 
